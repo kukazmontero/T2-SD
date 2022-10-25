@@ -24,27 +24,62 @@ app.get("/", async (req, res) => {
   await producer.send({
     topic: 'test-topic',
     messages: [
-      { value: 'Rodrigo eres la persona mas negra que eh conocido en mi vida' },
-    ],
+      { key: 'key1', value: 'hello world', partition: 0 },
+      { key: 'key2', value: 'hey hey!', partition: 1 }
+    ]
   })
+  await producer.disconnect()
 
-  await producer.send({
-    topic: 'test-topic',
-    messages: [
-      { value: 'Benjamin bacallo kl' },
-    ],
-  })
   res.send({
     mensaje: "enviado"
   })
-});
+})
+
   // Consuming
   app.get("/rx", async (req,res) => {
 
   await consumer1.connect()
-  await consumer1.subscribe({ topic: 'test-topic', fromBeginning: false })
-
+  await consumer1.subscribe({ topic: 'test-topic', fromBeginning: true })
+  
   await consumer1.run({
+    partitionsConsumedConcurrently: 2,
+    eachMessage: async ({ topic, partition, message, heartbeat, pause }) => {
+        console.log({
+            partition,
+            key: message.key.toString(),
+            value: message.value.toString(),
+            headers: message.headers,
+        })
+    },
+})
+/*await consumer1.run({
+  partitionsConsumedConcurrently: 2,
+  eachMessage: async ({ topic, partition, message }) => {
+    msgNumber++
+    kafka.logger().info('Incoming message', {
+      topic,
+      partition,
+      offset: message.offset,
+      timestamp: message.timestamp,
+      headers: Object.keys(message.headers).reduce(
+        (headers, key) => ({
+          ...headers,
+          [key]: message.headers[key].toString(),
+        }),
+        {}
+      ),
+      key: message.key.toString(),
+      value: message.value.toString(),
+      msgNumber,
+    })
+
+    kafka.logger().info('Now sleeping for 5000ms')
+    await sleep(5000)
+    kafka.logger().info('Finished sleeping')
+  },
+})*/
+
+  /*await consumer1.run({
     eachMessage: async ({ topic, partition, message }) => {
       console.log({
         //partition,
@@ -60,15 +95,16 @@ app.get("/", async (req, res) => {
 
   console.log("Consumidor 2:")
   await consumer2.run({
-    eachMessage: async ({ topic, partition, message }) => {
-      console.log({
-        //partition,
-        //offset: message.offset,
-        Consumer:2,
-        value: message.value.toString(),
-      })
+    partitionsConsumedConcurrently: 2,
+    eachMessage: async ({ topic, partition, message, heartbeat, pause }) => {
+        console.log({
+            partition,
+            key: message.key.toString(),
+            value: message.value.toString(),
+            headers: message.headers,
+        })
     },
-  })
+})*/
   res.send({
     mensaje: "recibido"
   })
