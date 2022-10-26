@@ -1,0 +1,36 @@
+{
+    "usuarios": [
+        {
+            "Nombre" : "Gabriel",
+            "Apellido" : "Gonzalez",
+            "RUT" : "20781463-6",
+            "Correo" : "gabriel.gonzalez1@mail.udp.cl",
+            "Patente" : "GEGM26",
+            "Premium" : "Si"
+        },
+        {
+            "Nombre" : "Lukas",
+            "Apellido" : "Montero",
+            "RUT" : "20550237-8",
+            "Correo" : "lukas.montero@mail.udp.cl",
+            "Patente" : "LSMS12",
+            "Premium" : "No"
+        },
+        {
+            "Nombre" : "Rodrigo",
+            "Apellido" : "Ordenes",
+            "RUT" : "19160321-k",
+            "Correo" : "rodrigo.ordenes1@mail.udp.cl",
+            "Patente" : "XXX123",
+            "Premium" : "Si"
+        },
+        {
+            "Nombre" : "Benjamin",
+            "Apellido" : "Tello",
+            "RUT" : "20296220-3",
+            "Correo" : "benjamin.tello1@mail.udp.cl",
+            "Patente" : "GEI123",
+            "Premium" : "No"
+        }
+    ]
+}
