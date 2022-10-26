@@ -17,8 +17,11 @@ const kafka = new Kafka({
 
 //somos producer
 const producer = kafka.producer();
+const producer_ventas = kafka.producer();
+
 const consumer1 = kafka.consumer({ groupId: 'grupo sexo1' })
 
+let stock = []
 
 
 app.get("/listapremium", async (req, res) => {
@@ -65,10 +68,14 @@ app.post("/registro", async (req, res) => {
   const fileName = './users.json';
   const file = require(fileName);
   let nuevousuario = req.body
-  file.premium.push(nuevousuario)
-  console.log(file.premium)
-  /*let jsonData = require('./users.json');
-  */
+  if(nuevousuario.Premium === "Si"){
+    file.premium.push(nuevousuario)
+    console.log(file.premium)
+  }
+  if(nuevousuario.Premium === "No"){
+    file.nopremium.push(nuevousuario)
+    console.log(file.nopremium)
+  }
   fs.writeFile(fileName, JSON.stringify(file), function writeJSON(err) {
     if (err) return console.log(err);
     console.log(JSON.stringify(file));
@@ -90,16 +97,16 @@ app.post("/aceptar", async (req, res) => {
   //console.log(premium)
   if(premium === "Si") {
     if(aceptado === "Si") {
-      console.log("Si")
+      file.miembros.push(file.premium[numero])
+      var deletefile = file.premium.splice(numero)
       res.send({
         mensaje: "Usuario aceptado"
       })
     }
     if(aceptado === "No") {
-      console.log("No")
-      console.log(file.nopremium[numero]) 
-      var deletefile = file.nopremium.splice(numero)
-      console.log(file.nopremium)
+      console.log(file.premium[numero]) 
+      var deletefile = file.premium.splice(numero)
+      console.log(file.premium)
       res.send({
         mensaje: "Usuario No aceptado"
       })
@@ -110,6 +117,8 @@ app.post("/aceptar", async (req, res) => {
   if(premium === "No") {
     if(aceptado === "Si") {
       console.log("Si")
+      file.miembros.push(file.nopremium[numero])
+      var deletefile = file.nopremium.splice(numero)
       res.send({
         mensaje: "Usuario aceptado"
       })
@@ -135,6 +144,61 @@ app.post("/aceptar", async (req, res) => {
   await producer.disconnect()
   
 })
+app.post("/venta", async (req, res) => {
+  const fileName = './venta.json';
+  const file = require(fileName);
+  let nuevaventa = req.body
+
+  file.registro.push(nuevaventa)
+  //console.log(JSON.stringify(file));
+
+  fs.writeFile(fileName, JSON.stringify(file), function writeJSON(err) {
+    if (err) return console.log(err);
+    //console.log(JSON.stringify(file));
+    });
+
+  if(parseInt(nuevaventa.StockRestante) <= 20){
+    stock.push(nuevaventa)
+    console.log("HOLA")
+  }
+
+  //if(stock.length == 5){
+    console.log("Poco stock")
+      console.log(stock)
+      console.log("\n")
+      await producer_ventas.connect()
+      await producer_ventas.send({
+      topic: 'topico',
+      messages: [
+          { key: 'ventas', value: JSON.stringify(stock), partition: 0},
+        ],
+      }
+      )
+      //stock.length = 0
+    //}
+
+  res.send({
+    mensaje: "Venta Registrada con Exito"
+  })
+
+})
+
+app.get('/miembros', async (req, res) => {
+  const fileName = './users.json';
+  const file = require(fileName);
+  console.log(file.miembros)
+  res.send({
+    mensaje: "Lista miembros"
+  })
+})
+app.get('/ventas', async (req, res) => {
+  const fileName = './venta.json';
+  const file = require(fileName);
+  console.log(file.registro)
+  res.send({
+    mensaje: "Registro Ventas"
+  })
+})
 
 async function consumidor() {
   consumer1.connect()
@@ -149,9 +213,6 @@ async function consumidor() {
     },
 })
 
-  res.send({
-    mensaje: "recibido"
-  })
 };
 
 app.listen(port, () => {
