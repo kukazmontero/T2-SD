@@ -1,9 +1,8 @@
-FROM node:16.6.1-alpine3.14
+FROM node:14
 
-WORKDIR /home/node
-
-COPY . .
-
+WORKDIR /app
+COPY package.json /app
 RUN npm install
-
-CMD [ "npm", "start" ]
+RUN npm install -g nodemon
+COPY . /app
+CMD ["npm", "start"]
