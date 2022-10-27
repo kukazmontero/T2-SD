@@ -18,10 +18,14 @@ const kafka = new Kafka({
 //somos producer
 const producer = kafka.producer();
 const producer_ventas = kafka.producer();
+const producer_ubicaciones = kafka.producer();
 
 const consumer1 = kafka.consumer({ groupId: 'grupo 1' })
 
 var stock = [];
+
+const fileName3 = './ubicaciones.json';
+const file3 = require(fileName3);
 
 
 app.get("/listapremium", async (req, res) => {
@@ -87,6 +91,7 @@ app.post("/registro", async (req, res) => {
     mensaje: "Usuario Publicado"
   })
 })
+
 app.post("/aceptar", async (req, res) => {
   // Producing
   const fileName = './users.json';
@@ -176,6 +181,35 @@ app.post("/venta", async (req, res) => {
       }) 
     
     }
+
+    for(i in file3.registro){
+      if(nuevaventa.RutMaestro.toString() === file3.registro[i].RutMaestro.toString()){
+        console.log("Ubicacion de maestro ya guardada")
+        
+      }
+      else{
+      aux = {
+        "RutMaestro": nuevaventa.RutMaestro,
+        "Ubicacion": nuevaventa.Ubicacion
+      }
+
+      file3.registro.push(aux)
+      fs.writeFile(fileName3, JSON.stringify(file3), function writeJSON(err) {
+        if (err) return console.log(err);
+      });
+      
+      await producer_ubicaciones.connect()
+      await producer_ubicaciones.send({
+        topic: 'ubicaciones',
+        messages: [
+          { key: 'ubicaciones', value: JSON.stringify(aux), partition: 0 , },
+        ],
+      }
+      )
+
+      }
+    }
+
     if(stock.length == 5){
       console.log("Entregas de un lote de 5 para reposicion de stock:")
       console.log(stock)
@@ -246,6 +280,25 @@ app.get('/miembros', async (req, res) => {
     mensaje: "Lista miembros"
   })
 })
+
+// Punto 3: ubicaciones y profugos
+app.get('/vercarritos', async (req, res) => {
+
+for(i in file3.registro){
+  random = Math.floor(Math.random() * 10)
+  random1 = Math.floor(Math.random() * 10)
+
+  console.log(" - - - ")
+  console.log(file3.registro[i].RutMaestro)
+  console.log(parseInt(file3.registro[i].Ubicacion[0]) + random, ",", parseInt(file3.registro[i].Ubicacion[2]) + random1)
+  console.log(" - - - ")
+}
+
+})
+
+
+//
+
 
 async function consumidor() {
   consumer1.connect()
