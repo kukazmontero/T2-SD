@@ -99,3 +99,13 @@ services:
       - ./node/index.js:/app/index.js
     ports:
       - 3003:3000
+
+
+
+fileSystem.writeFile('users.json', "Hola", err=>{
+  if(err){
+    console.log("Error al escribir en el json" ,err)
+  } else {
+    console.log('Usuario agregado en el JSON')
+  }
+  })

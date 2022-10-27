@@ -35,3 +35,22 @@ services:
       - ./node/index.js:/app/index.js
     ports:
       - 3000:3000
+  
+  # --- Consumidor --- 
+  consumidor:
+    build:
+      context: ./Consumidor
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - zookeeper
+      - kafka
+      - backend
+    environment:
+      PORT: 3001
+      kafkaHost: kafka:9092
+    volumes: # nose 
+      - ./Consumidor/index.js:/app/index.js
+    ports:
+      - 3001:3000
+  
