@@ -18,14 +18,13 @@ const kafka = new Kafka({
 //somos producer
 const producer = kafka.producer();
 const producer_ventas = kafka.producer();
-const producer_ubicaciones = kafka.producer();
+const producer_coordenadas = kafka.producer();
 
-const consumer1 = kafka.consumer({ groupId: 'grupo 1' })
+const consumidor_usuarios = kafka.consumer({ groupId: 'grupo1' })
+const consumidor_ventas = kafka.consumer({groupId: 'grupo2'})
+const consumidor_ubicaciones = kafka.consumer({ groupId: 'grupo3' })
 
 var stock = [];
-
-const fileName3 = './ubicaciones.json';
-const file3 = require(fileName3);
 
 
 app.get("/listapremium", async (req, res) => {
@@ -35,7 +34,7 @@ app.get("/listapremium", async (req, res) => {
       jsonData.premium[i].numerolista = i;
       await producer.connect()
       await producer.send({
-        topic: 'test-topic',
+        topic: 'usuarios',
         messages: [
           { key: 'Premium', value: JSON.stringify( jsonData.premium[i]), partition: 0, },
         ]
@@ -54,7 +53,7 @@ app.get("/lista", async (req, res) => {
     jsonData.nopremium[i].numerolista = i;
     await producer.connect()
       await producer.send({
-        topic: 'test-topic',
+        topic: 'usuarios',
         messages: [
           { key: 'NoPremium', value: JSON.stringify(jsonData.nopremium[i]), partition: 1 , },
         ],
@@ -74,15 +73,15 @@ app.post("/registro", async (req, res) => {
   let nuevousuario = req.body
   if(nuevousuario.Premium === "Si"){
     file.premium.push(nuevousuario)
-    console.log(file.premium)
+    //console.log(file.premium)
   }
   if(nuevousuario.Premium === "No"){
     file.nopremium.push(nuevousuario)
-    console.log(file.nopremium)
+    //console.log(file.nopremium)
   }
   fs.writeFile(fileName, JSON.stringify(file), function writeJSON(err) {
     if (err) return console.log(err);
-    console.log(JSON.stringify(file));
+    //console.log(JSON.stringify(file));
     console.log('Guardando en ' + fileName);
   });
 
@@ -102,11 +101,11 @@ app.post("/aceptar", async (req, res) => {
   //console.log(premium)
   if(premium === "Si") {
     if(aceptado === "Si") {
+      file.premium[numero].estado = "Normal"
       file.miembros.push(file.premium[numero])
       var deletefile = file.premium.splice(numero)
-
       res.send({
-        mensaje: "Usuario aceptado1"
+        mensaje: "Usuario aceptado"
       })
     }
     if(aceptado === "No") {
@@ -114,7 +113,7 @@ app.post("/aceptar", async (req, res) => {
       var deletefile = file.premium.splice(numero)
       console.log(file.premium)
       res.send({
-        mensaje: "Usuario No aceptado2"
+        mensaje: "Usuario No aceptado"
       })
     }
     /*delete file.premium[numero]
@@ -123,11 +122,11 @@ app.post("/aceptar", async (req, res) => {
   if(premium === "No") {
     if(aceptado === "Si") {
       console.log("Si")
+      file.nopremium[numero].estado = "Normal";
       file.miembros.push(file.nopremium[numero])
       var deletefile = file.nopremium.splice(numero)
-
       res.send({
-        mensaje: "Usuario aceptado3"
+        mensaje: "Usuario aceptado"
       })
     }
     if(aceptado === "No") {
@@ -136,7 +135,7 @@ app.post("/aceptar", async (req, res) => {
       var deletefile = file.nopremium.splice(numero)
       console.log(file.nopremium)
       res.send({
-        mensaje: "Usuario No aceptado4"
+        mensaje: "Usuario No aceptado"
       })
     }
     
@@ -151,6 +150,7 @@ app.post("/aceptar", async (req, res) => {
   await producer.disconnect()
   
 })
+
 app.post("/venta", async (req, res) => {
   const fileName = './venta.json';
   const file = require(fileName);
@@ -162,57 +162,36 @@ app.post("/venta", async (req, res) => {
     if (err) return console.log(err);
     });
 
+  
+  await producer_ventas.connect()
+  await producer_ventas.send({
+  topic: 'ventas',
+  messages: [
+        { key: 'ventas', value: JSON.stringify(nuevaventa), partition: 0,},
+      ]
+    }) 
+
   console.log("Registro de venta Ingresado")
-  console.log(JSON.stringify(nuevaventa))
+  //console.log(JSON.stringify(nuevaventa))
   
   // Si una venta contiene un stock <= 20, se guarda en un arreglo 
   if(parseInt(nuevaventa.StockRestante) <= 20){
     stock.push(nuevaventa)
-
     console.log("Poco stock")
     console.log("\n")
-
-      await producer_ventas.connect()
-      await producer_ventas.send({
-      topic: 'topico',
-      messages: [
-          { key: 'ventas', value: JSON.stringify(stock), partition: 0},
-        ],
-      }) 
-    
-    }
-
-    for(i in file3.registro){
-      if(nuevaventa.RutMaestro.toString() === file3.registro[i].RutMaestro.toString()){
-        console.log("Ubicacion de maestro ya guardada")
-        
-      }
-      else{
-      aux = {
-        "RutMaestro": nuevaventa.RutMaestro,
-        "Ubicacion": nuevaventa.Ubicacion
-      }
-
-      file3.registro.push(aux)
-      fs.writeFile(fileName3, JSON.stringify(file3), function writeJSON(err) {
-        if (err) return console.log(err);
-      });
-      
-      await producer_ubicaciones.connect()
-      await producer_ubicaciones.send({
-        topic: 'ubicaciones',
-        messages: [
-          { key: 'ubicaciones', value: JSON.stringify(aux), partition: 0 , },
-        ],
-      }
-      )
-
-      }
     }
 
     if(stock.length == 5){
       console.log("Entregas de un lote de 5 para reposicion de stock:")
-      console.log(stock)
+      //console.log(stock)
+      await producer_ventas.connect()
+      await producer_ventas.send({
+      topic: 'ventas',
+      messages: [
+          { key: 'reposicion', value: JSON.stringify(stock), partition: 1},
+        ],
+      }) 
+
       stock.pop()
       stock.pop()
       stock.pop()
@@ -226,7 +205,6 @@ app.post("/venta", async (req, res) => {
 
 })
 
-// Calculo de ventas diarias (1 Dia  = 5 Min)
 app.get('/ventasdiarias', async (req, res)=>{
   const fileName = './venta.json';
   const file = require(fileName);
@@ -258,8 +236,14 @@ app.get('/ventasdiarias', async (req, res)=>{
     }
 
     }
-    console.log("Imprime")
-    console.log(datos)
+    console.log("Resultados Diarios:")
+    for(i in datos){
+      console.log("Rut Maestro: ", datos[i].RutMaestro)
+      console.log("Cantidad de Clientes Totales: ", datos[i].CantidadClientes)
+      console.log("Cantidad de Sopaipillas Totales: ", datos[i].CantidadSopaipillas)
+      console.log("Promedio de Ventas: ", parseInt(datos[i].CantidadSopaipillas) / parseInt(datos[i].CantidadClientes), "Sopaipillas")
+      console.log(" - - - ")
+    }
 
 })
 
@@ -281,39 +265,137 @@ app.get('/miembros', async (req, res) => {
   })
 })
 
-// Punto 3: ubicaciones y profugos
-app.get('/vercarritos', async (req, res) => {
 
-for(i in file3.registro){
-  random = Math.floor(Math.random() * 10)
-  random1 = Math.floor(Math.random() * 10)
-
-  console.log(" - - - ")
-  console.log(file3.registro[i].RutMaestro)
-  console.log(parseInt(file3.registro[i].Ubicacion[0]) + random, ",", parseInt(file3.registro[i].Ubicacion[2]) + random1)
-  console.log(" - - - ")
-}
+app.post('/reportar', async (req, res) => {
+  const fileName = './users.json';
+  const file = require(fileName);
+  let patente = req.query.Patente;
+  let coordenadas = req.query.Coordenadas;
+  //console.log(patente)
+  for(i in file.miembros){
+    if(patente === file.miembros[i].Patente){
+      file.miembros[i].Estado = "Profugo"
+      fs.writeFile(fileName, JSON.stringify(file), function writeJSON(err) {
+        if (err) return console.log(err);
+        });
+      var aux = {
+        "patente" : patente,
+        "coordenadas" : coordenadas
+      }
+      //console.log(aux)
+      await producer_coordenadas.connect()
+      await producer_coordenadas.send({
+        topic: 'Coordenadas',
+        messages: [
+          { key: 'Profugo', value: JSON.stringify( aux), partition: 1, },
+        ]
+      })
+    }
+    
+  }
+  await producer_coordenadas.disconnect()
+  res.send({
+    message: 'Reporte enviado'
+  })
 
 })
 
+// - - . 
 
-//
+
+async function coordenadas() {
+  const fileName = './users.json';
+  const file = require(fileName)
+
+  for(i in file.miembros){
+    if(file.miembros[i].Estado === "Normal"){
+    random = Math.floor(Math.random() * 10)
+    random1 = Math.floor(Math.random() * 10)
+
+    var coordenadas = {
+      "patente" : file.miembros[i].Patente,
+      "coordenadas" : random + ", " + random1
+    }
+
+    await producer_coordenadas.connect()
+      await producer_coordenadas.send({
+        topic: 'Coordenadas',
+        messages: [
+          { key: 'Coordenadas', value: JSON.stringify( coordenadas), partition: 0, },
+        ]
+      })
+  }}
+  await producer_coordenadas.disconnect()
+}
 
 
 async function consumidor() {
-  consumer1.connect()
-  await consumer1.subscribe({ topic: 'test-topic', fromBeginning: true })
-  await consumer1.run({
+  consumidor_usuarios.connect()
+  await consumidor_usuarios.subscribe({ topic: 'usuarios', fromBeginning: true })
+  await consumidor_usuarios.run({
     eachMessage: async ({ topic, partition, message, heartbeat, pause }) => {
+      if(partition ===0){
         console.log({
-            key: message.key.toString(),
+            Lista: 'Premium',
             value:JSON.parse(message.value.toString()),
             partition,
         })
+      }
+      else if(partition ===1){
+        console.log({
+            Lista: 'No Premium',
+            value:JSON.parse(message.value.toString()),
+            partition,
+        })
+      }
     },
 })
 
+consumidor_ventas.connect()
+await consumidor_ventas.subscribe({ topic: 'ventas', fromBeginning: true })
+await consumidor_ventas.run({
+  eachMessage: async ({ topic, partition, message, heartbeat, pause }) => {
+    if(partition ===0){
+      console.log({
+          Venta: 'General',
+          value:JSON.parse(message.value.toString()),
+          partition,
+      })
+    }
+    else if(partition ===1){
+      console.log({
+          Venta: 'Reposicion',
+          value:JSON.parse(message.value.toString()),
+          partition,
+      })
+    }
+  },
+})
+
+consumidor_ubicaciones.connect()
+await consumidor_ubicaciones.subscribe({ topic: 'Coordenadas', fromBeginning: true })
+await consumidor_ubicaciones.run({
+  partitionsConsumedConcurrently: 2,
+  eachMessage: async ({ topic, partition, message, heartbeat, pause }) => {
+    //console.log("Holaaaaaaaaa")
+    if(partition ===0){
+      console.log({
+          value:JSON.parse(message.value.toString()),
+          partition,
+      })
+    }
+    if(partition ===1){
+      console.log({
+          title: 'El carrito esta profugo',
+          value:JSON.parse(message.value.toString()),
+          partition,
+      })
+    }
+  },
+})
+
 };
+
 
 app.listen(port, () => {
   console.log(`Cliente Corriendo`);

@@ -31,10 +31,29 @@
             "Apellido" : "Tello",
             "RUT" : "20296220-3",
             "Correo" : "benjamin.tello1@mail.udp.cl",
-            "Patente" : "GEI123",
+            "Patente" : "GEG122",
             "Premium" : "No"
         }
     ],
     "miembros": [
+        {
+            "Nombre" : "Maestro1",
+            "Apellido" : "Random",
+            "RUT" : "20550237-8",
+            "Correo" : "random.maestro1@mail.udp.cl",
+            "Patente" : "LSMS12",
+            "Premium" : "Si",
+            "Estado" : "Normal"
+
+        },
+        {
+            "Nombre" : "Maestro2",
+            "Apellido" : "Random",
+            "RUT" : "20296220-3",
+            "Correo" : "random.maestro2@mail.udp.cl",
+            "Patente" : "GOQ123",
+            "Premium" : "No",
+            "Estado" : "Normal"
+        }
     ]
 }
