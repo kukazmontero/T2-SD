@@ -101,17 +101,17 @@ app.post("/aceptar", async (req, res) => {
   //console.log(premium)
   if(premium === "Si") {
     if(aceptado === "Si") {
-      file.premium[numero].estado = "Normal"
+      file.premium[numero].Estado = "Normal"
       file.miembros.push(file.premium[numero])
-      var deletefile = file.premium.splice(numero)
+      var deletefile = file.premium.splice(numero, 1)
       res.send({
         mensaje: "Usuario aceptado"
       })
     }
     if(aceptado === "No") {
-      console.log(file.premium[numero]) 
-      var deletefile = file.premium.splice(numero)
-      console.log(file.premium)
+      //console.log(file.premium[numero]) 
+      var deletefile = file.premium.splice(numero, 1)
+      //console.log(file.premium)
       res.send({
         mensaje: "Usuario No aceptado"
       })
@@ -121,19 +121,19 @@ app.post("/aceptar", async (req, res) => {
   }
   if(premium === "No") {
     if(aceptado === "Si") {
-      console.log("Si")
+      //console.log("Si")
       file.nopremium[numero].estado = "Normal";
       file.miembros.push(file.nopremium[numero])
-      var deletefile = file.nopremium.splice(numero)
+      var deletefile = file.nopremium.splice(numero, 1)
       res.send({
         mensaje: "Usuario aceptado"
       })
     }
     if(aceptado === "No") {
-      console.log("No")
-      console.log(file.nopremium[numero]) 
-      var deletefile = file.nopremium.splice(numero)
-      console.log(file.nopremium)
+      //console.log("No")
+      //console.log(file.nopremium[numero]) 
+      var deletefile = file.nopremium.splice(numero, 1)
+      //console.log(file.nopremium)
       res.send({
         mensaje: "Usuario No aceptado"
       })
@@ -143,7 +143,7 @@ app.post("/aceptar", async (req, res) => {
 
   fs.writeFile(fileName, JSON.stringify(file), function writeJSON(err) {
     if (err) return console.log(err);
-    console.log(JSON.stringify(file));
+    //console.log(JSON.stringify(file));
     console.log('Guardando en ' + fileName);
   });
 
@@ -235,6 +235,7 @@ app.get('/ventasdiarias', async (req, res)=>{
       )
     }
 
+
     }
     console.log("Resultados Diarios:")
     for(i in datos){
@@ -244,6 +245,9 @@ app.get('/ventasdiarias', async (req, res)=>{
       console.log("Promedio de Ventas: ", parseInt(datos[i].CantidadSopaipillas) / parseInt(datos[i].CantidadClientes), "Sopaipillas")
       console.log(" - - - ")
     }
+    res.send({
+      mensaje: "Reistro de Ventas"
+    })
 
 })
 
@@ -400,4 +404,5 @@ await consumidor_ubicaciones.run({
 app.listen(port, () => {
   console.log(`Cliente Corriendo`);
   consumidor();
+  setInterval(coordenadas, 30000);
 });
